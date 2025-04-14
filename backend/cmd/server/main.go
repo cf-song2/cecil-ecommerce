@@ -12,7 +12,14 @@ import (
 func withCORS(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
-		if origin == "http://localhost" {
+
+		allowedOrigins := map[string]bool{
+			"https://cecil-personal.site":     true,
+			"https://www.cecil-personal.site": true,
+			"https://api.cecil-personal.site": true,
+		}
+
+		if allowedOrigins[origin] {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")

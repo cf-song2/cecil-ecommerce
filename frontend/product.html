@@ -23,7 +23,7 @@
 
     async function loadProduct() {
       try {
-        const res = await fetch(`http://localhost:8080/api/product?id=${id}`);
+        const res = await fetch(`/api/product?id=${id}`);
         if (!res.ok) throw new Error("Product not found");
 
         const p = await res.json();
@@ -32,7 +32,7 @@
             <img src="${p.image_url}" alt="${p.name}" />
             <h2>${p.name}</h2>
             <p>${p.description}</p>
-            <strong>$${p.price}</strong><br>
+            <strong>$${(p.price / 100).toFixed(2)}</strong><br>
             <button onclick="addToCart(${p.id})">Add to Cart</button>
           </div>
         `;
@@ -44,11 +44,19 @@
 
     async function addToCart(id) {
       try {
-        await fetch("http://localhost:8080/api/cart", {
+        const res = await fetch("/api/cart", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ product_id: id, quantity: 1 })
         });
+
+        if (!res.ok) {
+          const err = await res.text();
+          alert("⚠️ Failed to add: " + err);
+          return;
+        }
+
         alert("Added to cart");
       } catch (err) {
         alert("⚠️ Failed to add to cart");
