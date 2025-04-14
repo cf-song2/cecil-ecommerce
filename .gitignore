@@ -1,5 +1,6 @@
 /frontend/certs/origin.crt
 /frontend/certs/origin.key
+/frontend/certs/*
 
 **/.DS_Store
 **/node_modules/
