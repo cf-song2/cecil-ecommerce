@@ -1,0 +1,12 @@
+/frontend/certs/origin.crt
+/frontend/certs/origin.key
+
+**/.DS_Store
+**/node_modules/
+**/dist/
+**/build/
+**/tmp/
+**/certs/
+
+.env
+.env.*

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product Detail</title>
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <h1>📦 Product Detail</h1>
+  <nav>
+    <a href="/index.html">Home</a>
+    <a href="/cart.html">Cart</a>
+    <a href="/login.html">Login</a>
+  </nav>
+
+  <div id="product-detail"></div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+
+    async function loadProduct() {
+      try {
+        const res = await fetch(`http://localhost:8080/api/product?id=${id}`);
+        if (!res.ok) throw new Error("Product not found");
+
+        const p = await res.json();
+        document.getElementById("product-detail").innerHTML = `
+          <div class="card">
+            <img src="${p.image_url}" alt="${p.name}" />
+            <h2>${p.name}</h2>
+            <p>${p.description}</p>
+            <strong>$${p.price}</strong><br>
+            <button onclick="addToCart(${p.id})">Add to Cart</button>
+          </div>
+        `;
+      } catch (err) {
+        console.error("❌ Failed to load product:", err);
+        document.getElementById("product-detail").innerHTML = "<p>⚠️ Product not found</p>";
+      }
+    }
+
+    async function addToCart(id) {
+      try {
+        await fetch("http://localhost:8080/api/cart", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ product_id: id, quantity: 1 })
+        });
+        alert("Added to cart");
+      } catch (err) {
+        alert("⚠️ Failed to add to cart");
+        console.error(err);
+      }
+    }
+
+    loadProduct();
+  </script>
+</body>
+</html>

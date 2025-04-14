@@ -1,0 +1,21 @@
+# Ignore the frontend (nginx serves it)
+frontend/
+
+# Git
+.git
+.gitignore
+
+# Build artifacts
+*.exe
+*.out
+*.o
+*.a
+*.so
+*.log
+
+# Editor stuff
+*.swp
+*.swo
+*.DS_Store
+.vscode/
+.idea/

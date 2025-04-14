@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="header">
+    <h1>🔐 Login</h1>
+    <nav>
+      <a href="/index.html">Home</a>
+      <a href="/cart.html">Cart</a>
+      <a href="/login.html">Login</a>
+    </nav>
+  </div>
+
+  <form id="login-form">
+    <label>
+      Username
+      <input type="text" name="username" required />
+    </label><br />
+    <label>
+      Password
+      <input type="password" name="password" required />
+    </label><br />
+    <button type="submit">Login</button>
+  </form>
+
+  <p>
+    Don’t have an account? <a href="/register.html">Sign up</a>
+  </p>
+
+  <p id="login-status"></p>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("login-form");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const payload = {
+          username: form.username.value,
+          password: form.password.value
+        };
+
+        try {
+          const res = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(payload)
+          });
+
+          if (!res.ok) {
+            document.getElementById("login-status").innerText = "❌ Login failed";
+            return;
+          }
+
+          const data = await res.json();
+          document.getElementById("login-status").innerText = `✅ Welcome, ${data.user}`;
+          window.location.href = "/index.html";
+        } catch (err) {
+          console.error(err);
+          document.getElementById("login-status").innerText = "⚠️ Error occurred";
+        }
+      });
+    });
+  </script>
+</body>
+</html>
