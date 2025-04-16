@@ -10,6 +10,7 @@ import (
 	"cecil-ecommerce/internal/model"
 )
 
+// It will fail
 func TestCartHandler_POST(t *testing.T) {
 	payload := model.CartItem{ProductID: 1, Quantity: 2}
 	body, _ := json.Marshal(payload)

@@ -6,12 +6,19 @@ import (
 	"net/http"
 	"strings"
 
-	"cecil-ecommerce/internal/repository"
 	"cecil-ecommerce/internal/service"
 	"cecil-ecommerce/internal/util"
 )
 
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+type AuthHandler struct {
+	authService service.AuthService
+}
+
+func NewAuthHandler(s service.AuthService) *AuthHandler {
+	return &AuthHandler{authService: s}
+}
+
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var creds struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -32,7 +39,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("[LoginHandler] Attempting login for: '%s'", creds.Username)
 
-	user, sessionID, err := service.AuthenticateUser(creds.Username, creds.Password)
+	user, sessionID, err := h.authService.Authenticate(creds.Username, creds.Password)
 	if err != nil {
 		log.Printf("[LoginHandler] ❌ Auth failed for '%s': %v", creds.Username, err)
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
@@ -49,7 +56,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
@@ -69,7 +76,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := repository.CreateUser(creds.Username, creds.Email, creds.Password); err != nil {
+	if err := h.authService.Register(creds.Username, creds.Email, creds.Password); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -77,14 +84,14 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	util.JSON(w, http.StatusCreated, "User registered")
 }
 
-func CurrentUserHandler(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	sessionID, err := util.GetSessionID(r)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	user, err := repository.GetUserBySessionID(sessionID)
+	user, err := h.authService.GetCurrentUser(sessionID)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return

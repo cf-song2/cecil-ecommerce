@@ -7,7 +7,9 @@
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <div class="form-container">
+  <header id="site-header"></header>
+
+  <main class="form-container">
     <h2>Sign Up</h2>
     <form id="register-form">
       <input type="text" placeholder="Username" name="username" required />
@@ -16,33 +18,45 @@
       <button type="submit">Register</button>
     </form>
     <p>Already have an account? <a href="/login.html">Login here</a>.</p>
-  </div>
+  </main>
+
+  <footer id="site-footer"></footer>
 
   <script>
-    document.getElementById("register-form").addEventListener("submit", async function (e) {
-      e.preventDefault();
+    document.addEventListener("DOMContentLoaded", () => {
+      fetch("/partials/header.html")
+        .then(res => res.text())
+        .then(html => document.getElementById("site-header").innerHTML = html);
 
-      const form = e.target;
-      const body = JSON.stringify({
-        username: form.username.value,
-        email: form.email.value,
-        password: form.password.value,
+      fetch("/partials/footer.html")
+        .then(res => res.text())
+        .then(html => document.getElementById("site-footer").innerHTML = html);
+
+      document.getElementById("register-form").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const body = JSON.stringify({
+          username: form.username.value,
+          email: form.email.value,
+          password: form.password.value,
+        });
+
+        const res = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body
+        });
+
+        if (res.ok) {
+          alert("Registration successful!");
+          window.location.href = "/login.html";
+        } else {
+          const msg = await res.text();
+          alert("Error: " + msg);
+        }
       });
-
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body
-      });
-
-      if (res.ok) {
-        alert("✅ Registration successful!");
-        window.location.href = "/login.html";
-      } else {
-        const msg = await res.text();
-        alert("❌ Error: " + msg);
-      }
     });
   </script>
 </body>

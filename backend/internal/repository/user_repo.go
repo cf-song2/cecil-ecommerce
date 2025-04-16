@@ -2,14 +2,34 @@ package repository
 
 import (
 	"cecil-ecommerce/internal/model"
+	"cecil-ecommerce/internal/util"
+	"database/sql"
 	"errors"
 )
 
-func CreateUser(username, email, password string) error {
+type UserRepository interface {
+	Create(username, email, password string) error
+	GetByUsername(username string) (*model.User, error)
+	GetBySessionID(sessionID string) (model.User, error)
+	SaveSession(userID int, sessionID string) error
+}
+
+type userRepository struct {
+	db *sql.DB
+}
+
+func NewUserRepository(db *sql.DB) UserRepository {
+	return &userRepository{db: db}
+}
+
+func (r *userRepository) Create(username, email, password string) error {
+	hashed, err := util.HashPassword(password)
+	if err != nil {
+		return err
+	}
+
 	var exists bool
-	err := db.QueryRow(`
-		SELECT EXISTS(SELECT 1 FROM users WHERE username = $1 OR email = $2)
-	`, username, email).Scan(&exists)
+	err = r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE username = $1 OR email = $2)", username, email).Scan(&exists)
 	if err != nil {
 		return err
 	}
@@ -17,16 +37,12 @@ func CreateUser(username, email, password string) error {
 		return errors.New("user already exists")
 	}
 
-	_, err = db.Exec(`
-		INSERT INTO users (username, email, password)
-		VALUES ($1, $2, $3)
-	`, username, email, password)
-
+	_, err = r.db.Exec("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", username, email, hashed)
 	return err
 }
 
-func GetUserByUsername(username string) (*model.User, error) {
-	row := db.QueryRow(`
+func (r *userRepository) GetByUsername(username string) (*model.User, error) {
+	row := r.db.QueryRow(`
 		SELECT id, username, email, password, COALESCE(session_id, '') 
 		FROM users 
 		WHERE username = $1
@@ -39,9 +55,9 @@ func GetUserByUsername(username string) (*model.User, error) {
 	return &u, nil
 }
 
-func GetUserBySessionID(sessionID string) (model.User, error) {
+func (r *userRepository) GetBySessionID(sessionID string) (model.User, error) {
 	var u model.User
-	err := db.QueryRow(`
+	err := r.db.QueryRow(`
 		SELECT id, username, email, password, COALESCE(session_id, '')
 		FROM users 
 		WHERE session_id = $1
@@ -49,8 +65,8 @@ func GetUserBySessionID(sessionID string) (model.User, error) {
 	return u, err
 }
 
-func SaveUserSession(userID int, sessionID string) error {
-	_, err := db.Exec(`
+func (r *userRepository) SaveSession(userID int, sessionID string) error {
+	_, err := r.db.Exec(`
 		UPDATE users SET session_id = $1 WHERE id = $2
 	`, sessionID, userID)
 	return err

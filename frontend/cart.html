@@ -7,46 +7,54 @@
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <div class="header">
-    <h1>🛒 Your Cart</h1>
-    <nav>
-      <a href="/index.html">Home</a>
-      <a href="/cart.html">Cart</a>
-      <a href="/login.html">Login</a>
-    </nav>
-  </div>
+  <header id="site-header"></header>
 
-  <div id="cart-container"></div>
-  <button onclick="clearCart()">🧹 Clear Cart</button>
+  <main>
+    <h2>Your Cart</h2>
+    <div id="cart-container"></div>
+    <button onclick="clearCart()">Clear Cart</button>
+  </main>
+
+  <footer id="site-footer"></footer>
 
   <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      fetch("/partials/header.html")
+        .then(res => res.text())
+        .then(html => document.getElementById("site-header").innerHTML = html);
+
+      fetch("/partials/footer.html")
+        .then(res => res.text())
+        .then(html => document.getElementById("site-footer").innerHTML = html);
+
+      loadCart();
+    });
+
     async function loadCart() {
       try {
-        const res = await fetch("/api/cart", {
-          credentials: "include"
-        });
+        const res = await fetch("/api/cart", { credentials: "include" });
         if (!res.ok) throw new Error("Not logged in");
 
         const items = await res.json();
         const container = document.getElementById("cart-container");
 
         if (!items || items.length === 0) {
-          container.innerHTML = "<p>🧺 Your cart is empty.</p>";
+          container.innerHTML = "<p>Your cart is empty.</p>";
           return;
         }
 
         container.innerHTML = items.map(item => `
           <div class="cart-item" data-id="${item.product_id}">
-            <span>🛍️ Product ID: ${item.product_id}</span><br />
+            <span><strong>Product:</strong> ${item.product_name || "Unnamed Product"} (ID: ${item.product_id})</span><br />
             <label>Quantity:
               <input type="number" value="${item.quantity}" min="1" onchange="updateQuantity(${item.product_id}, this.value)" />
             </label>
-            <button onclick="removeItem(${item.product_id})">❌ Remove</button>
+            <button onclick="removeItem(${item.product_id})">Remove</button>
           </div>
         `).join("");
 
       } catch (err) {
-        document.getElementById("cart-container").innerHTML = "<p>❌ Failed to load cart.</p>";
+        document.getElementById("cart-container").innerHTML = "<p>Failed to load cart.</p>";
         console.error(err);
       }
     }
@@ -62,7 +70,7 @@
 
         if (!res.ok) throw new Error(await res.text());
       } catch (err) {
-        alert("❌ Failed to update item");
+        alert("Failed to update item");
         console.error(err);
       }
     }
@@ -77,7 +85,7 @@
         if (!res.ok) throw new Error(await res.text());
         loadCart();
       } catch (err) {
-        alert("❌ Failed to remove item");
+        alert("Failed to remove item");
         console.error(err);
       }
     }
@@ -92,12 +100,10 @@
         if (!res.ok) throw new Error(await res.text());
         loadCart();
       } catch (err) {
-        alert("❌ Clear cart failed");
+        alert("Clear cart failed");
         console.error(err);
       }
     }
-
-    loadCart();
   </script>
 </body>
 </html>

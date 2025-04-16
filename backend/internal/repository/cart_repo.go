@@ -1,11 +1,28 @@
 package repository
 
 import (
+	"database/sql"
 	"cecil-ecommerce/internal/model"
 )
 
-func AddToCart(userID, productID, quantity int) error {
-	_, err := db.Exec(`
+type CartRepository interface {
+	Add(userID, productID, quantity int) error
+	Get(userID int) ([]model.CartItem, error)
+	Update(userID, productID, quantity int) error
+	Remove(userID, productID int) error
+	Clear(userID int) error
+}
+
+type cartRepository struct {
+	db *sql.DB
+}
+
+func NewCartRepository(db *sql.DB) CartRepository {
+	return &cartRepository{db: db}
+}
+
+func (r *cartRepository) Add(userID, productID, quantity int) error {
+	_, err := r.db.Exec(`
 		INSERT INTO cart (user_id, product_id, quantity)
 		VALUES ($1, $2, $3)
 		ON CONFLICT (user_id, product_id) DO UPDATE
@@ -14,8 +31,8 @@ func AddToCart(userID, productID, quantity int) error {
 	return err
 }
 
-func GetCartItems(userID int) ([]model.CartItem, error) {
-	rows, err := db.Query(`
+func (r *cartRepository) Get(userID int) ([]model.CartItem, error) {
+	rows, err := r.db.Query(`
 		SELECT user_id, product_id, quantity FROM cart WHERE user_id = $1
 	`, userID)
 	if err != nil {
@@ -34,22 +51,22 @@ func GetCartItems(userID int) ([]model.CartItem, error) {
 	return items, nil
 }
 
-func UpdateCartItem(userID, productID, quantity int) error {
-	_, err := db.Exec(`
+func (r *cartRepository) Update(userID, productID, quantity int) error {
+	_, err := r.db.Exec(`
 		UPDATE cart SET quantity = $3 WHERE user_id = $1 AND product_id = $2
 	`, userID, productID, quantity)
 	return err
 }
 
-func RemoveCartItem(userID, productID int) error {
-	_, err := db.Exec(`
+func (r *cartRepository) Remove(userID, productID int) error {
+	_, err := r.db.Exec(`
 		DELETE FROM cart WHERE user_id = $1 AND product_id = $2
 	`, userID, productID)
 	return err
 }
 
-func ClearCart(userID int) error {
-	_, err := db.Exec(`
+func (r *cartRepository) Clear(userID int) error {
+	_, err := r.db.Exec(`
 		DELETE FROM cart WHERE user_id = $1
 	`, userID)
 	return err

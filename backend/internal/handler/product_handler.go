@@ -8,8 +8,16 @@ import (
 	"cecil-ecommerce/internal/util"
 )
 
-func ProductsHandler(w http.ResponseWriter, r *http.Request) {
-	products, err := service.GetAllProducts()
+type ProductHandler struct {
+	service service.ProductService
+}
+
+func NewProductHandler(s service.ProductService) *ProductHandler {
+	return &ProductHandler{service: s}
+}
+
+func (h *ProductHandler) List(w http.ResponseWriter, r *http.Request) {
+	products, err := h.service.GetAll()
 	if err != nil {
 		http.Error(w, "Failed to load products", http.StatusInternalServerError)
 		return
@@ -17,7 +25,7 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	util.JSON(w, http.StatusOK, products)
 }
 
-func ProductDetailHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ProductHandler) Detail(w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Query().Get("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -25,7 +33,7 @@ func ProductDetailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	product, err := service.GetProductByID(id)
+	product, err := h.service.GetByID(id)
 	if err != nil {
 		http.Error(w, "Product not found", http.StatusNotFound)
 		return

@@ -5,10 +5,23 @@ import (
 	"cecil-ecommerce/internal/repository"
 )
 
-func GetAllProducts() ([]model.Product, error) {
-	return repository.GetAllProducts()
+type ProductService interface {
+	GetAll() ([]model.Product, error)
+	GetByID(id int) (*model.Product, error)
 }
 
-func GetProductByID(id int) (*model.Product, error) {
-	return repository.GetProductByID(id)
+type productService struct {
+	repo repository.ProductRepository
+}
+
+func NewProductService(r repository.ProductRepository) ProductService {
+	return &productService{repo: r}
+}
+
+func (s *productService) GetAll() ([]model.Product, error) {
+	return s.repo.GetAll()
+}
+
+func (s *productService) GetByID(id int) (*model.Product, error) {
+	return s.repo.GetByID(id)
 }

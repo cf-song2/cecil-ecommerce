@@ -3,25 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Product Catalog</title>
-  <link rel="icon" href="/favicon.ico">
+  <title>Explore the Collection</title>
+  <link rel="icon" href="/favicon.ico" />
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <div class="header">
-    <h1>🛍️ Product Catalog</h1>
-    <div class="user-info" id="user-info"></div>
-    <nav>
-      <a href="/index.html">Home</a>
-      <a href="/cart.html">Cart</a>
-      <a href="/login.html">Login</a>
-      <a href="/register.html">Sign Up</a>
-    </nav>
-  </div>
 
-  <div id="product-list"></div>
+  <div data-include="/partials/header.html"></div>
+
+  <main>
+    <div id="product-list"></div>
+  </main>
+
+  <div data-include="/partials/footer.html"></div>
 
   <script>
+    document.querySelectorAll('[data-include]').forEach(async (el) => {
+      const file = el.getAttribute('data-include');
+      const res = await fetch(file);
+      const html = await res.text();
+      el.innerHTML = html;
+    });
+
     async function fetchCurrentUser() {
       try {
         const res = await fetch("/api/me", {
@@ -29,8 +32,10 @@
         });
         if (res.ok) {
           const user = await res.json();
-          const info = document.getElementById("user-info");
-          info.innerHTML = `👤 Welcome, <strong>${user.username}</strong>`;
+          const info = document.querySelector(".user-info");
+          if (info) {
+            info.innerHTML = `Welcome, <strong>${user.username}</strong>`;
+          }
         }
       } catch {
         // 로그인 안 된 상태는 무시
@@ -61,8 +66,8 @@
           </div>
         `).join("");
       } catch (err) {
-        console.error("❌ Failed to load products:", err);
-        document.getElementById("product-list").innerHTML = "<p>⚠️ Failed to load products.</p>";
+        console.error("Failed to load products:", err);
+        document.getElementById("product-list").innerHTML = "<p>Failed to load products.</p>";
       }
     }
 
@@ -83,13 +88,13 @@
 
         if (!res.ok) {
           const errText = await res.text();
-          alert(`⚠️ Error: ${errText}`);
+          alert("Error: " + errText);
           return;
         }
 
         alert("Added to cart!");
       } catch (err) {
-        alert("⚠️ Failed to add to cart");
+        alert("Failed to add to cart");
         console.error(err);
       }
     }

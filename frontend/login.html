@@ -7,40 +7,44 @@
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <div class="header">
-    <h1>🔐 Login</h1>
-    <nav>
-      <a href="/index.html">Home</a>
-      <a href="/cart.html">Cart</a>
-      <a href="/login.html">Login</a>
-    </nav>
-  </div>
+  <header id="site-header"></header>
 
-  <form id="login-form">
-    <label>
-      Username
-      <input type="text" name="username" required />
-    </label><br />
-    <label>
-      Password
-      <input type="password" name="password" required />
-    </label><br />
-    <button type="submit">Login</button>
-  </form>
+  <main>
+    <h2>Login</h2>
+    <form id="login-form">
+      <label>
+        Username
+        <input type="text" name="username" required />
+      </label><br />
+      <label>
+        Password
+        <input type="password" name="password" required />
+      </label><br />
+      <button type="submit">Login</button>
+    </form>
 
-  <p>
-    Don’t have an account? <a href="/register.html">Sign up</a>
-  </p>
+    <p>
+      Don’t have an account? <a href="/register.html">Sign up</a>
+    </p>
 
-  <p id="login-status"></p>
+    <p id="login-status"></p>
+  </main>
+
+  <footer id="site-footer"></footer>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const form = document.getElementById("login-form");
+      fetch("/partials/header.html")
+        .then(res => res.text())
+        .then(html => document.getElementById("site-header").innerHTML = html);
 
+      fetch("/partials/footer.html")
+        .then(res => res.text())
+        .then(html => document.getElementById("site-footer").innerHTML = html);
+
+      const form = document.getElementById("login-form");
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
-
         const payload = {
           username: form.username.value,
           password: form.password.value
@@ -55,16 +59,16 @@
           });
 
           if (!res.ok) {
-            document.getElementById("login-status").innerText = "❌ Login failed";
+            document.getElementById("login-status").innerText = "Login failed";
             return;
           }
 
           const data = await res.json();
-          document.getElementById("login-status").innerText = `✅ Welcome, ${data.user}`;
+          document.getElementById("login-status").innerText = `Welcome, ${data.user}`;
           window.location.href = "/index.html";
         } catch (err) {
           console.error(err);
-          document.getElementById("login-status").innerText = "⚠️ Error occurred";
+          document.getElementById("login-status").innerText = "Error occurred";
         }
       });
     });
