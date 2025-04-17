@@ -1,42 +1,29 @@
-COMPOSE = docker compose
-BACKEND = backend
-DB = db
+DB_URL=postgres://user:pass@localhost:5432/shop?sslmode=disable
+MIGRATION_FILE=./migrations/001_init.up.sql
+BACKEND_BIN=./backend/server
+SEED_BIN=./backend/seed
 
 build:
-	$(COMPOSE) build
+	go build -o $(BACKEND_BIN) ./cmd/server
+	go build -o $(SEED_BIN) ./cmd/seed
 
-up:
-	$(COMPOSE) up
+run:
+	DATABASE_URL=$(DB_URL) $(BACKEND_BIN)
 
-upd:
-	$(COMPOSE) up -d
-
-down:
-	$(COMPOSE) down
-
-clean:
-	$(COMPOSE) down -v --remove-orphans
-
-reup:
-	$(COMPOSE) down -v --remove-orphans
-	$(COMPOSE) build
-	$(COMPOSE) up -d
-
-logs:
-	$(COMPOSE) logs -f $(BACKEND)
-
-sh:
-	$(COMPOSE) exec $(BACKEND) /bin/sh
-
-psql:
-	$(COMPOSE) exec $(DB) psql -U user -d shop
-
-# Do not use this manually
 migrate:
-	$(COMPOSE) exec $(DB) psql -U user -d shop -f /app/migrations/001_init.up.sql
+	psql $(DB_URL) -f $(MIGRATION_FILE)
 
 seed:
-	$(COMPOSE) exec $(BACKEND) ./seed
+	DATABASE_URL=$(DB_URL) $(SEED_BIN)
 
-ps:
-	$(COMPOSE) ps
+reset:
+	psql $(DB_URL) -c "DROP TABLE IF EXISTS cart, products, users CASCADE;" && \
+	make migrate && make seed
+
+dev: build migrate seed run
+
+test:
+	go test ./...
+
+clean:
+	rm -f $(BACKEND_BIN) $(SEED_BIN)
